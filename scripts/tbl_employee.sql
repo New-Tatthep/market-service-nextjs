@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS tbl_employee (
+    id VARCHAR PRIMARY KEY,
+    name VARCHAR NOT NULL
+);
+

@@ -1,0 +1,36 @@
+POST http://localhost:5001/new-service/v1/employee/filter
+Content-Type: application/json
+
+{
+    "filters": {
+        "name": ""
+    }
+}
+###
+
+POST http://localhost:5001/new-service/v1/employee/create
+Content-Type: application/json
+
+{
+    "id":"",
+    "name": "new TT"
+}
+
+###
+
+POST http://localhost:5001/new-service/v1/employee/update
+Content-Type: application/json
+
+{
+    "id":"2ycUWR8LM79xsZq71TSDmhjcRBA",
+    "name": "new 2"
+}
+
+###
+
+POST http://localhost:5001/new-service/v1/employee/delete
+Content-Type: application/json
+
+{
+    "id":"2ycUMoIUFxYaYL7GqEhXDubbrUY"
+}

@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: 'md5'
+      POSTGRES_USER: 'dbadmin'
+      POSTGRES_PASSWORD: 'P@ssw0rd'
+      POSTGRES_DB: 'new_db_market'
+      PGDATA: '/var/lib/postgresql/data'
+      TZ: 'Asia/Bangkok'
+      POSTGRES_MAX_CONNECTIONS: 1500
+    volumes:
+      - "./pq-data:/var/lib/postgresql/data"
+    ports:
+      - 1432:5432
+
+  # rediscache:
+  #   image: redis
+  #   ports:
+  #     - '6379:6379'
+  #   volumes:
+  #     - ./cache:/data
+  #     - ./redis.conf:/usr/local/etc/redis/redis.conf
+  #   command: redis-server /usr/local/etc/redis/redis.conf
+
+networks:
+  kong-net:
