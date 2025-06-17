@@ -5,7 +5,7 @@ app_name=new-service
 http_port=5001
 
 github_repo="ghcr.io"
-github_token="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"
+github_token="1234123"
 github_image_name="surasak1413/new-service"
 github_user="surasak.po1413@gmail.com"
 #TODO:end checking before build
