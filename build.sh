@@ -1,12 +1,12 @@
 #!/bin/bash
 #TODO:begin checking before build
-go_module=new-service
-app_name=new-service
+go_module=market-service
+app_name=market-service
 http_port=5001
 
 github_repo="ghcr.io"
 github_token="1234123"
-github_image_name="surasak1413/new-service"
+github_image_name="surasak1413/market-service"
 github_user="surasak.po1413@gmail.com"
 #TODO:end checking before build
 

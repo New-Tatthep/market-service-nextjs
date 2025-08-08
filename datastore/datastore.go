@@ -25,6 +25,7 @@ var (
 type IAction interface {
 	Do(fn func(action IAction) error) error
 	dbAction
+	ProductAction
 }
 
 type action struct {

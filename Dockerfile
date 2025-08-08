@@ -12,17 +12,17 @@ COPY . ./
 ARG TARGETOS
 ARG TARGETARCH
 RUN echo "building for GOOS: $TARGETOS, GOARCH: $TARGETARCH"
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-s -w"  -tags timetzdata -mod=vendor -a -installsuffix  -o new-service
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-s -w"  -tags timetzdata -mod=vendor -a -installsuffix  -o market-service
 
 # final stage
 FROM scratch AS final
 WORKDIR /
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=build /go-modules/new-service .
+COPY --from=build /go-modules/market-service .
 ENV TZ=Asia/Bangkok
 
 VOLUME /conf
 VOLUME /scripts
 
 EXPOSE $HTTP_PORT
-ENTRYPOINT ["./new-service"]
+ENTRYPOINT ["./market-service"]

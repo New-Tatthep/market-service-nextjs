@@ -1,8 +1,8 @@
 package main
 
 import (
-	"new-service/custom_config"
-	"new-service/registry"
+	"market-service/custom_config"
+	"market-service/registry"
 
 	"github.com/New-Tatthep/microservice"
 	"github.com/New-Tatthep/microservice/log"
@@ -68,6 +68,7 @@ func main() {
 
 	// Register route
 	registry.APIRegister(ms)
+	registry.APIProductRegister(ms)
 
 	// Start server
 	err = ms.Start()

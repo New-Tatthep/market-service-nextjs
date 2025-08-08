@@ -1,9 +1,9 @@
 package service
 
 import (
-	"new-service/custom_error"
-	"new-service/datastore"
-	"new-service/request"
+	"market-service/custom_error"
+	"market-service/datastore"
+	"market-service/request"
 
 	"github.com/New-Tatthep/microservice"
 	"github.com/New-Tatthep/microservice/util/stringutil"
@@ -41,14 +41,22 @@ func (sv *service) FilterEmployee(req *datastore.FilterData) ([]microservice.Fie
 
 func (sv *service) CreateEmployee(req *request.EmployeeRequest) ([]microservice.Field, error) {
 
-	if stringutil.IsEmptyString(req.Name) {
+	if stringutil.IsEmptyString(req.FirstName) {
 		return nil, custom_error.New("employee name is required")
 	}
 
-	err := sv.store.InsertEmployee(datastore.EmployeeModel{
-		ID:   uuid.NewUUID(),
-		Name: req.Name,
-	})
+	req.UpdateCode = uuid.NewUUID()
+
+	prepareEmployeeDatas := datastore.EmployeeModel{
+		UserCode:  uuid.NewUUID(),
+		UserName:  req.UserName,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Email:     req.Email,
+		Status:    "active",
+	}
+
+	err := sv.store.InsertEmployee(prepareEmployeeDatas)
 	if err != nil {
 		return nil, custom_error.Wrap(err)
 	}
@@ -58,17 +66,17 @@ func (sv *service) CreateEmployee(req *request.EmployeeRequest) ([]microservice.
 
 func (sv *service) UpdateEmployee(req *request.EmployeeRequest) ([]microservice.Field, error) {
 
-	if stringutil.IsEmptyString(req.ID) {
-		return nil, custom_error.New("employee ID is required")
+	if stringutil.IsEmptyString(req.UserCode) {
+		return nil, custom_error.New("employee UserCode is required")
 	}
 
-	if stringutil.IsEmptyString(req.Name) {
-		return nil, custom_error.New("employee name is required")
+	if stringutil.IsEmptyString(req.FirstName) {
+		return nil, custom_error.New("employee FirstName is required")
 	}
 
 	err := sv.store.UpdateEmployee(datastore.EmployeeModel{
-		ID:   req.ID,
-		Name: req.Name,
+		UserCode:  req.UserCode,
+		FirstName: req.FirstName,
 	})
 	if err != nil {
 		return nil, custom_error.Wrap(err)
@@ -79,11 +87,11 @@ func (sv *service) UpdateEmployee(req *request.EmployeeRequest) ([]microservice.
 
 func (sv *service) DeleteEmployee(req *request.EmployeeRequest) ([]microservice.Field, error) {
 
-	if stringutil.IsEmptyString(req.ID) {
+	if stringutil.IsEmptyString(req.UserCode) {
 		return nil, custom_error.New("employee ID is required")
 	}
 
-	err := sv.store.DeleteEmployee(req.ID)
+	err := sv.store.DeleteEmployee(req.UserCode)
 	if err != nil {
 		return nil, custom_error.Wrap(err)
 	}

@@ -44,7 +44,8 @@ databases:
     #The default is 0 (unlimited).
     max-open-conns: 10
     initial-scripts:
-      - "./scripts/tbl_employee.sql"
+      - "./scripts/employee.sql"
+      - "./scripts/product.sql"
       
 redis:
   #redis context name (required)

@@ -3,12 +3,13 @@ package datastore
 import (
 	"database/sql"
 	"fmt"
-	"new-service/binding"
-	"new-service/custom_error"
+	"market-service/binding"
+	"market-service/custom_error"
 	"strconv"
 	"strings"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/New-Tatthep/microservice/util/dateutil"
 )
 
 type dbAction interface {
@@ -20,15 +21,34 @@ type dbAction interface {
 
 func (act *action) InsertEmployee(input EmployeeModel) error {
 
+	updateTime := dateutil.GetCurrentEpochTime()
 	builder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	insertBuilder := builder.Insert(
 		binding.TblEmployeeTableName,
 	).Columns(
-		"id",
-		"name",
+		"user_code",
+		"user_name",
+		"first_name",
+		"last_name",
+		"email",
+		"status",
+		// "profile_image",
+		"update_code",
+		"update_time",
+		"mobile_no",
+		"password",
 	).Values(
-		input.ID,
-		input.Name,
+		input.UserCode,
+		input.UserName,
+		input.FirstName,
+		input.LastName,
+		input.Email,
+		input.Status,
+		// input.ProfileImage,
+		"TEST",
+		updateTime,
+		input.MobileNo,
+		input.Password,
 	)
 
 	sqlCmd, values, err := insertBuilder.ToSql()
@@ -67,8 +87,11 @@ func (act *action) UpdateEmployee(input EmployeeModel) error {
 	defer stmt.Close()
 
 	_, err = stmt.Exec(
-		input.ID,
-		input.Name,
+		input.UserCode,
+		input.FirstName,
+		input.LastName,
+		// input.UpdateCode,
+		// input.UpdateTime,
 	)
 	if err != nil {
 		return err
@@ -103,11 +126,16 @@ func (act *action) FilterEmployee(filterData *FilterData) ([]*EmployeeModel, int
 	totalBuilder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 	searchQuery := searchBuilder.Select(
-		"id",
-		"name",
-	).From(`tbl_employee`)
+		"user_code",
+		"first_name",
+		"last_name",
+	).From(
+		binding.TblEmployeeTableName,
+	)
 
-	totalQuery := totalBuilder.Select("COUNT(id) as total").From(`tbl_employee`)
+	totalQuery := totalBuilder.Select("COUNT(user_code) as total").From(
+		binding.TblEmployeeTableName,
+	)
 
 	// Define filter variables for date and time ranges
 	var limit, offset int64
@@ -119,15 +147,15 @@ func (act *action) FilterEmployee(filterData *FilterData) ([]*EmployeeModel, int
 		}
 
 		switch key {
-		case "name":
+		case "first_name":
 			name := val.(string)
 			searchQuery = searchQuery.Where(
 				squirrel.And{
-					squirrel.Like{"LOWER(name)": fmt.Sprintf("%%%s%%", strings.ToLower(name))},
+					squirrel.Like{"LOWER(first_name)": fmt.Sprintf("%%%s%%", strings.ToLower(name))},
 				})
 			totalQuery = totalQuery.Where(
 				squirrel.And{
-					squirrel.Like{"LOWER(name)": fmt.Sprintf("%%%s%%", strings.ToLower(name))},
+					squirrel.Like{"LOWER(first_name)": fmt.Sprintf("%%%s%%", strings.ToLower(name))},
 				})
 		case "limit":
 			valStr := val.(float64)
@@ -172,8 +200,9 @@ func (act *action) FilterEmployee(filterData *FilterData) ([]*EmployeeModel, int
 	for rows.Next() {
 		item := &EmployeeModel{}
 		if err := rows.Scan(
-			&item.ID,
-			&item.Name,
+			&item.UpdateCode,
+			&item.FirstName,
+			&item.LastName,
 		); err != nil {
 			return nil, -1, err
 		}

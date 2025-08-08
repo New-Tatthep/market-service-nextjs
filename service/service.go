@@ -3,8 +3,8 @@ package service
 import (
 	"errors"
 	"fmt"
-	"new-service/custom_config"
-	"new-service/datastore"
+	"market-service/custom_config"
+	"market-service/datastore"
 
 	"github.com/New-Tatthep/microservice"
 )
@@ -13,11 +13,6 @@ const (
 	RedisContextName = "rediscache"
 	KafkaContextName = "mq"
 )
-
-type Action interface {
-	Validate() error
-	ServiceAction
-}
 
 type service struct {
 	ctx          microservice.IContext
@@ -86,7 +81,7 @@ func (sv *service) Validate() error {
 	return nil
 }
 
-func New(options ...Option) (Action, error) {
+func New(options ...Option) (*service, error) {
 	sv := new(service)
 
 	for _, opt := range options {

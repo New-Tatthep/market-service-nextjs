@@ -1,11 +1,11 @@
 package handler
 
 import (
+	"market-service/custom_error"
+	"market-service/datastore"
+	"market-service/request"
+	"market-service/service"
 	"net/http"
-	"new-service/custom_error"
-	"new-service/datastore"
-	"new-service/request"
-	"new-service/service"
 	"strconv"
 
 	"github.com/New-Tatthep/microservice"
@@ -13,6 +13,55 @@ import (
 
 func FilterEmployeeHandler(ctx microservice.IContext) error {
 	tag := "tagFilterEmployeeHandler"
+
+	req := new(datastore.FilterData)
+	if err := ctx.Bind(req); err != nil {
+		return custom_error.ErrorResponse(
+			ctx,
+			tag,
+			http.StatusBadRequest,
+			"invalid request",
+			custom_error.Wrap(err),
+		)
+	}
+
+	sv, err := service.New(
+		service.NewServiceFullOptionWithContext(ctx)...,
+	)
+	if err != nil {
+		return custom_error.ErrorResponse(
+			ctx,
+			tag,
+			http.StatusInternalServerError,
+			"new service failed",
+			custom_error.Wrap(err),
+		)
+	}
+
+	resp, err := sv.FilterEmployee(req)
+	if err != nil {
+		return custom_error.ErrorResponse(
+			ctx,
+			tag,
+			http.StatusInternalServerError,
+			"failed",
+			custom_error.Wrap(err),
+		)
+	} else {
+		return ctx.Response(
+			microservice.DebugLevel,
+			tag,
+			http.StatusOK,
+			strconv.Itoa(http.StatusOK),
+			"success",
+			nil,
+			resp...,
+		)
+	}
+}
+
+func GetEmployeeHandler(ctx microservice.IContext) error {
+	tag := "tagGetEmployeeHandler"
 
 	req := new(datastore.FilterData)
 	if err := ctx.Bind(req); err != nil {

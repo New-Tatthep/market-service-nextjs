@@ -1,4 +1,4 @@
-POST http://localhost:5001/new-service/v1/employee/filter
+POST http://localhost:5001/market-service/v1/employee/filter
 Content-Type: application/json
 
 {
@@ -8,7 +8,7 @@ Content-Type: application/json
 }
 ###
 
-POST http://localhost:5001/new-service/v1/employee/create
+POST http://localhost:5001/market-service/v1/employee/create
 Content-Type: application/json
 
 {
@@ -18,7 +18,7 @@ Content-Type: application/json
 
 ###
 
-POST http://localhost:5001/new-service/v1/employee/update
+POST http://localhost:5001/market-service/v1/employee/update
 Content-Type: application/json
 
 {
@@ -28,7 +28,7 @@ Content-Type: application/json
 
 ###
 
-POST http://localhost:5001/new-service/v1/employee/delete
+POST http://localhost:5001/market-service/v1/employee/delete
 Content-Type: application/json
 
 {

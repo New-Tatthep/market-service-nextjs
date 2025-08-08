@@ -2,5 +2,6 @@ package binding
 
 // table
 const (
-	TblEmployeeTableName = "tbl_employee"
+	TblEmployeeTableName = "employee"
+	TblProductTableName  = "product"
 )
