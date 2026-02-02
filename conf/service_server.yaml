@@ -46,6 +46,7 @@ databases:
     initial-scripts:
       - "./scripts/employee.sql"
       - "./scripts/product.sql"
+      - "./scripts/log_sign_on.sql"
       
 redis:
   #redis context name (required)

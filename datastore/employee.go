@@ -12,14 +12,18 @@ import (
 	"github.com/New-Tatthep/microservice/util/dateutil"
 )
 
-type dbAction interface {
+type EmployeeDataStoreAction interface {
 	InsertEmployee(input EmployeeModel) error
 	UpdateEmployee(input EmployeeModel) error
 	DeleteEmployee(id string) error
 	FilterEmployee(filterData *FilterData) ([]*EmployeeModel, int64, error)
 }
 
-func (act *action) InsertEmployee(input EmployeeModel) error {
+func (st *store) EmployeeAction() EmployeeDataStoreAction {
+	return st
+}
+
+func (sv *store) InsertEmployee(input EmployeeModel) error {
 
 	updateTime := dateutil.GetCurrentEpochTime()
 	builder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
@@ -28,11 +32,14 @@ func (act *action) InsertEmployee(input EmployeeModel) error {
 	).Columns(
 		"user_code",
 		"user_name",
+		"user_type",
 		"first_name",
 		"last_name",
 		"email",
 		"status",
 		// "profile_image",
+		"create_code",
+		"create_time",
 		"update_code",
 		"update_time",
 		"mobile_no",
@@ -40,12 +47,15 @@ func (act *action) InsertEmployee(input EmployeeModel) error {
 	).Values(
 		input.UserCode,
 		input.UserName,
+		input.UserType,
 		input.FirstName,
 		input.LastName,
 		input.Email,
 		input.Status,
 		// input.ProfileImage,
-		"TEST",
+		input.CreateCode,
+		updateTime,
+		input.UpdateCode,
 		updateTime,
 		input.MobileNo,
 		input.Password,
@@ -56,7 +66,7 @@ func (act *action) InsertEmployee(input EmployeeModel) error {
 		return custom_error.Wrap(err)
 	}
 
-	stmt, err := act.prepare(sqlCmd)
+	stmt, err := sv.conn.Prepare(sqlCmd)
 	if err != nil {
 		return custom_error.Wrap(err)
 	}
@@ -75,12 +85,12 @@ func (act *action) InsertEmployee(input EmployeeModel) error {
 	return nil
 }
 
-func (act *action) UpdateEmployee(input EmployeeModel) error {
+func (sv *store) UpdateEmployee(input EmployeeModel) error {
 	sqlCmd := `
 	UPDATE tbl_employee SET name = $2  WHERE id = $1
     `
 
-	stmt, err := act.prepare(sqlCmd)
+	stmt, err := sv.conn.Prepare(sqlCmd)
 	if err != nil {
 		return err
 	}
@@ -100,12 +110,12 @@ func (act *action) UpdateEmployee(input EmployeeModel) error {
 	return nil
 }
 
-func (act *action) DeleteEmployee(id string) error {
+func (sv *store) DeleteEmployee(id string) error {
 	sqlCmd := `
 	DELETE FROM tbl_employee  WHERE id = $1
     `
 
-	stmt, err := act.prepare(sqlCmd)
+	stmt, err := sv.conn.Prepare(sqlCmd)
 	if err != nil {
 		return err
 	}
@@ -121,7 +131,7 @@ func (act *action) DeleteEmployee(id string) error {
 	return nil
 }
 
-func (act *action) FilterEmployee(filterData *FilterData) ([]*EmployeeModel, int64, error) {
+func (sv *store) FilterEmployee(filterData *FilterData) ([]*EmployeeModel, int64, error) {
 	searchBuilder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	totalBuilder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
@@ -186,7 +196,7 @@ func (act *action) FilterEmployee(filterData *FilterData) ([]*EmployeeModel, int
 		return nil, -1, err
 	}
 
-	stmt, err := act.prepare(sqlCmd)
+	stmt, err := sv.conn.Prepare(sqlCmd)
 	if err != nil {
 		return nil, -1, err
 	}
@@ -210,7 +220,7 @@ func (act *action) FilterEmployee(filterData *FilterData) ([]*EmployeeModel, int
 		results = append(results, item)
 	}
 
-	totalResult, err := totalQuery.RunWith(act.dbStore.Conn()).Query()
+	totalResult, err := totalQuery.RunWith(sv.conn).Query()
 	if err != nil {
 		return nil, -1, err
 	}

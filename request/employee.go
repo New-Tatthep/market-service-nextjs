@@ -9,15 +9,19 @@ import (
 type EmployeeRequest struct {
 	UserCode     string `json:"user_code"`
 	UserName     string `json:"user_name"`
+	UserType     string `json:"user_type"`
 	FirstName    string `json:"first_name"`
 	LastName     string `json:"last_name"`
 	Email        string `json:"email"`
-	Status       string `json:"status"`
-	ProfileImage string `json:"profile_image"`
-	UpdateCode   string `json:"update_code"`
-	UpdateTime   int8   `json:"update_time"`
 	MobileNo     string `json:"mobile_no"`
 	Password     string `json:"password"`
+	BirthDay     int64  `json:"birth_day"`
+	ProfileImage string `json:"profile_image"`
+	CreateCode   string `json:"create_code"`
+	CreateTime   int64  `json:"create_time"`
+	UpdateCode   string `json:"update_code"`
+	UpdateTime   int64  `json:"update_time"`
+	Status       string `json:"status"`
 }
 
 func (req *EmployeeRequest) String() string {

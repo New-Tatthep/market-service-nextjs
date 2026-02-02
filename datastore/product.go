@@ -9,11 +9,15 @@ import (
 	"github.com/New-Tatthep/microservice/util/stringutil"
 )
 
-type ProductAction interface {
+type ProductDataStoreAction interface {
 	FilterProduct(filters []microservice.IQueryFilter, option microservice.IQueryOption) ([]Product, int64, error)
 }
 
-func (act *action) FilterProduct(filters []microservice.IQueryFilter, option microservice.IQueryOption) ([]Product, int64, error) {
+func (st *store) ProductAction() ProductDataStoreAction {
+	return st
+}
+
+func (sv *store) FilterProduct(filters []microservice.IQueryFilter, option microservice.IQueryOption) ([]Product, int64, error) {
 	searchBuilder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	totalBuilder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
@@ -62,7 +66,7 @@ func (act *action) FilterProduct(filters []microservice.IQueryFilter, option mic
 		return nil, -1, err
 	}
 
-	stmt, err := act.prepare(sqlCmd)
+	stmt, err := sv.conn.Prepare(sqlCmd)
 	if err != nil {
 		return nil, -1, err
 	}
@@ -91,7 +95,7 @@ func (act *action) FilterProduct(filters []microservice.IQueryFilter, option mic
 		results = append(results, result)
 	}
 
-	totalResult, err := totalQuery.RunWith(act.dbStore.Conn()).Query()
+	totalResult, err := totalQuery.RunWith(sv.conn).Query()
 	if err != nil {
 		return nil, -1, err
 	}

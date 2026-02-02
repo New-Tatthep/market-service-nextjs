@@ -2,129 +2,93 @@ package datastore
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"market-service/custom_error"
 
-	"github.com/Masterminds/squirrel"
 	"github.com/New-Tatthep/microservice"
 )
 
 const (
 	PostgresContextName = "pgdb"
 	MySQLContexName     = "mysqldb"
-
-	EmptyJson      = "{}"
-	EmptyJsonArray = "[]"
 )
 
-var (
-	ErrorDBStoreNotFound = fmt.Errorf("db context name %s not found", PostgresContextName)
-	ErrorRowNotFound     = fmt.Errorf("row not found")
-	ErrorRowNotAffected  = fmt.Errorf("sql: no rows affected")
-)
-
-type IAction interface {
-	Do(fn func(action IAction) error) error
-	dbAction
-	ProductAction
+type StoreAction interface {
+	Validate() error
+	Session() SessionAction
+	// AppConfig() AppConfigAction
+	Log() LogAction
+	// Counter() CounterAction
+	// MobileSession() MobileSessionAction
+	ProductAction() ProductDataStoreAction
+	EmployeeAction() EmployeeDataStoreAction
 }
 
-type action struct {
-	dbStore microservice.IDBStore
-	txn     *sql.Tx
+type store struct {
+	conn   *sql.DB
+	logger microservice.IContextLogger
 }
 
-type Option func(act *action) error
+type Option func(st *store) error
 
-func WithDBStore(dbStore microservice.IDBStore) Option {
-	return func(act *action) error {
-		act.dbStore = dbStore
+func New(options ...Option) (StoreAction, error) {
+	st := new(store)
+
+	for _, opt := range options {
+		if err := opt(st); err != nil {
+			return nil, custom_error.Wrap(err)
+		}
+	}
+
+	if err := st.Validate(); err != nil {
+		return nil, custom_error.Wrap(err)
+	}
+
+	return st, nil
+}
+
+func WithDBConnection(conn *sql.DB) Option {
+	return func(st *store) error {
+		st.conn = conn
+
 		return nil
 	}
 }
 
-func Action(ctx microservice.IContext, options ...Option) IAction {
-	act := &action{}
-
-	for _, option := range options {
-		if err := option(act); err != nil {
-			panic(err)
+func WithDBContext(ctx microservice.IContext, dbContextName string) Option {
+	return func(st *store) error {
+		dbStore, found := ctx.DB(dbContextName)
+		if !found {
+			return fmt.Errorf("db context name %s not found", dbContextName)
 		}
-	}
 
-	if act.dbStore == nil {
-		dbStore, err := getDbStore(ctx)
-		if err != nil {
-			panic(err)
-		}
-		act.dbStore = dbStore
-	}
+		st.conn = dbStore.Conn()
 
-	return act
+		return nil
+	}
 }
 
-func (act *action) Do(fn func(action IAction) error) error {
-	txn, err := act.dbStore.Conn().Begin()
-	if err != nil {
-		return err
+func WithMicroserviceDB(db microservice.IDBStore) Option {
+	return func(st *store) error {
+		st.conn = db.Conn()
+
+		return nil
 	}
-
-	act.txn = txn
-
-	if err := fn(act); err != nil {
-		if err := act.txn.Rollback(); err != nil {
-			act.txn = nil
-			return err
-		}
-		act.txn = nil
-		return err
-	}
-
-	act.txn = nil
-
-	return txn.Commit()
 }
 
-func (act *action) prepare(query string) (*sql.Stmt, error) {
-	if act.txn != nil {
-		return act.txn.Prepare(query)
+func WithMicroserviceLogger(logger microservice.IContextLogger) Option {
+	return func(st *store) error {
+		st.logger = logger
+
+		return nil
 	}
-	return act.dbStore.Conn().Prepare(query)
 }
 
-func (act *action) exec(query string, args ...interface{}) (sql.Result, error) {
-	if act.txn != nil {
-		return act.txn.Exec(query, args...)
-	}
-	return act.dbStore.Conn().Exec(query, args...)
-}
-
-func (act *action) query(query string, args ...interface{}) (*sql.Rows, error) {
-	if act.txn != nil {
-		return act.txn.Query(query, args...)
-	}
-	return act.dbStore.Conn().Query(query, args...)
-}
-
-func (act *action) connSquirrelQueryable() squirrel.BaseRunner {
-	if act.txn != nil {
-		return act.txn
-	}
-	return act.dbStore.Conn()
-}
-
-func getDbStore(ctx microservice.IContext) (microservice.IDBStore, error) {
-	dbStore, found := ctx.DB(PostgresContextName)
-	if !found {
-		return nil, ErrorDBStoreNotFound
+func (st *store) Validate() error {
+	if st.conn == nil {
+		return errors.New("not found db connection")
 	}
 
-	return dbStore, nil
-}
-
-func checkErrorNoRow(err error) error {
-	if err == sql.ErrNoRows {
-		return ErrorRowNotFound
-	}
-
-	return err
+	return nil
 }

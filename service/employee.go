@@ -10,19 +10,19 @@ import (
 	"github.com/New-Tatthep/microservice/util/uuid"
 )
 
-type ServiceAction interface {
+type EmployeeServiceAction interface {
 	FilterEmployee(req *datastore.FilterData) ([]microservice.Field, error)
 	CreateEmployee(input *request.EmployeeRequest) ([]microservice.Field, error)
 	UpdateEmployee(input *request.EmployeeRequest) ([]microservice.Field, error)
 	DeleteEmployee(req *request.EmployeeRequest) ([]microservice.Field, error)
 }
 
-func (sv *service) Connector() ServiceAction {
+func (sv *service) EmployeeAction() EmployeeServiceAction {
 	return sv
 }
 
 func (sv *service) FilterEmployee(req *datastore.FilterData) ([]microservice.Field, error) {
-	datalist, totals, err := sv.store.FilterEmployee(req)
+	datalist, totals, err := sv.store.EmployeeAction().FilterEmployee(req)
 	if err != nil {
 		return nil, custom_error.Wrap(err)
 	}
@@ -41,22 +41,26 @@ func (sv *service) FilterEmployee(req *datastore.FilterData) ([]microservice.Fie
 
 func (sv *service) CreateEmployee(req *request.EmployeeRequest) ([]microservice.Field, error) {
 
-	if stringutil.IsEmptyString(req.FirstName) {
-		return nil, custom_error.New("employee name is required")
+	if stringutil.IsEmptyString(req.UserName) {
+		return nil, custom_error.New("user name is required")
 	}
-
-	req.UpdateCode = uuid.NewUUID()
 
 	prepareEmployeeDatas := datastore.EmployeeModel{
-		UserCode:  uuid.NewUUID(),
-		UserName:  req.UserName,
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
-		Email:     req.Email,
-		Status:    "active",
+		UserCode:   uuid.NewUUID(),
+		UserName:   req.UserName,
+		UserType:   req.UserType,
+		FirstName:  req.FirstName,
+		LastName:   req.LastName,
+		Email:      req.Email,
+		Status:     "active",
+		Password:   req.Password,
+		CreateCode: "TT",
+		// CreateTime: dateutil.GetCurrentEpochTime(),
+		UpdateCode: "TT",
+		// UpdateTime: dateutil.GetCurrentEpochTime(),
 	}
 
-	err := sv.store.InsertEmployee(prepareEmployeeDatas)
+	err := sv.store.EmployeeAction().InsertEmployee(prepareEmployeeDatas)
 	if err != nil {
 		return nil, custom_error.Wrap(err)
 	}
@@ -74,7 +78,7 @@ func (sv *service) UpdateEmployee(req *request.EmployeeRequest) ([]microservice.
 		return nil, custom_error.New("employee FirstName is required")
 	}
 
-	err := sv.store.UpdateEmployee(datastore.EmployeeModel{
+	err := sv.store.EmployeeAction().UpdateEmployee(datastore.EmployeeModel{
 		UserCode:  req.UserCode,
 		FirstName: req.FirstName,
 	})
@@ -91,7 +95,7 @@ func (sv *service) DeleteEmployee(req *request.EmployeeRequest) ([]microservice.
 		return nil, custom_error.New("employee ID is required")
 	}
 
-	err := sv.store.DeleteEmployee(req.UserCode)
+	err := sv.store.EmployeeAction().DeleteEmployee(req.UserCode)
 	if err != nil {
 		return nil, custom_error.Wrap(err)
 	}

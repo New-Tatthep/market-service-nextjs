@@ -12,8 +12,12 @@ POST http://localhost:5001/market-service/v1/employee/create
 Content-Type: application/json
 
 {
-    "id":"",
-    "name": "new TT"
+    "user_name": "TT",
+    "user_type": "user",
+    "password": "P@ssw0rd",
+    "email": "tt@mail.com",
+    "first_name": "new",
+    "last_name": "TT"
 }
 
 ###

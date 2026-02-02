@@ -31,15 +31,15 @@ func main() {
 		log.Fatal("db config not found")
 	}
 
-	// redisConfigs, redisCfgFound := appConf.GetRedisConfigs()
-	// if !redisCfgFound {
-	// 	log.Fatal("redis config not found")
-	// }
+	redisConfigs, redisCfgFound := appConf.GetRedisConfigs()
+	if !redisCfgFound {
+		log.Fatal("redis config not found")
+	}
 
-	// kafkaConfigs, kafkaConfigsFound := appConf.GetKafkaConfigs()
-	// if !kafkaConfigsFound {
-	// 	log.Fatal("kafka config not found")
-	// }
+	kafkaConfigs, kafkaConfigsFound := appConf.GetKafkaConfigs()
+	if !kafkaConfigsFound {
+		log.Fatal("kafka config not found")
+	}
 
 	// asyncTaskConfig, asyncTaskConfigFound := appConf.GetAsyncTaskConfig()
 	// if !asyncTaskConfigFound {
@@ -58,8 +58,8 @@ func main() {
 		microservice.WithAPIConfig(apiConfig),
 		microservice.WithLogConfig(logConfig),
 		microservice.WithDBConfigs(dbConfigs...),
-		// microservice.WithRedisConfigs(redisConfigs...),
-		// microservice.WithKafkaConfigs(kafkaConfigs...),
+		microservice.WithRedisConfigs(redisConfigs...),
+		microservice.WithKafkaConfigs(kafkaConfigs...),
 		// microservice.WithAsyncTaskConfig(asyncTaskConfig),
 	)
 	if err != nil {
@@ -69,6 +69,7 @@ func main() {
 	// Register route
 	registry.APIRegister(ms)
 	registry.APIProductRegister(ms)
+	registry.ApiLoginRegister(ms)
 
 	// Start server
 	err = ms.Start()
