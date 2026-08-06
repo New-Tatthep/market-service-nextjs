@@ -1,0 +1,7 @@
+*.log
+logs/
+log/
+
+app.log
+server.log
+error.log
