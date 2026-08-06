@@ -5,6 +5,7 @@ AS
 $$
 
 BEGIN 
+ -- 1. ตาราง employee
  IF EXISTS(SELECT FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = 'employee') THEN
         RAISE NOTICE 'Table public.employee already exists.';
     ELSE
@@ -30,6 +31,7 @@ BEGIN
         );   
 END IF;
 
+-- 2. ตาราง employee_profile_edit_history
 IF EXISTS (SELECT FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = 'employee_profile_edit_history') THEN
         RAISE NOTICE 'Table public.employee_profile_edit_history already exists.';
     ELSE
@@ -48,7 +50,56 @@ IF EXISTS (SELECT FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tabl
     CREATE INDEX IF NOT EXISTS idx_employee_profile_edit_history_update_code ON employee_profile_edit_history (update_code);
     CREATE INDEX IF NOT EXISTS idx_employee_profile_edit_history_update_time ON employee_profile_edit_history (update_time);   
 
-    END IF;
+END IF;
+
+-- 3. ตาราง category (หมวดหมู่สินค้า)
+IF EXISTS (SELECT FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = 'category') THEN
+        RAISE NOTICE 'Table public.category already exists.';
+    ELSE
+        CREATE TABLE category (
+            code VARCHAR(50) PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            description TEXT NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+END IF;
+
+-- 4. ตาราง product (สินค้า)
+IF EXISTS (SELECT FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = 'product') THEN
+        RAISE NOTICE 'Table public.product already exists.';
+    ELSE
+        CREATE TABLE product (
+            code VARCHAR(50) PRIMARY KEY,
+            category_code VARCHAR(50) REFERENCES category(code) ON DELETE SET NULL,
+            name VARCHAR(255) NOT NULL,
+            description TEXT NULL,
+            price DECIMAL(10, 2) NOT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+            quantity INT8 NOT NULL DEFAULT 0,
+            image JSONB NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+        
+        CREATE INDEX IF NOT EXISTS idx_product_category ON product(category_code);
+END IF;
+
+-- 5. ตาราง cart_item (ตะกร้าสินค้า)
+IF EXISTS (SELECT FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename = 'cart_item') THEN
+        RAISE NOTICE 'Table public.cart_item already exists.';
+    ELSE
+        CREATE TABLE cart_item (
+            id SERIAL PRIMARY KEY,
+            user_id VARCHAR(100) NOT NULL,
+            product_code VARCHAR(50) REFERENCES product(code) ON DELETE CASCADE,
+            quantity INT NOT NULL DEFAULT 1,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT unique_user_product UNIQUE (user_id, product_code)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_cart_user ON cart_item(user_id);
+END IF;
 
 END
 $$;
