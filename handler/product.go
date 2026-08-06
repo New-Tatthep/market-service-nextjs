@@ -42,7 +42,7 @@ func ProductFilterHandler(ctx microservice.IContext) error {
 		)
 	}
 
-	resp, total, err := service.ProductAction().FilterProduct(*request)
+	resp, err := service.ProductAction().FilterProduct(*request)
 	if err != nil {
 		return ctx.Response(
 			microservice.ErrorLevel,
@@ -60,14 +60,7 @@ func ProductFilterHandler(ctx microservice.IContext) error {
 			strconv.Itoa(http.StatusOK),
 			"get reserve money success",
 			nil,
-			microservice.Field{
-				Key:   "datas",
-				Value: resp,
-			},
-			microservice.Field{
-				Key:   "total",
-				Value: total,
-			},
+			resp...,
 		)
 	}
 }
@@ -101,7 +94,7 @@ func ProductGetHandler(ctx microservice.IContext) error {
 		)
 	}
 
-	resp, total, err := service.FilterProduct(*request)
+	resp, err := service.FilterProduct(*request)
 	if err != nil {
 		return ctx.Response(
 			microservice.ErrorLevel,
@@ -119,14 +112,7 @@ func ProductGetHandler(ctx microservice.IContext) error {
 			strconv.Itoa(http.StatusOK),
 			"get reserve money success",
 			nil,
-			microservice.Field{
-				Key:   "datas",
-				Value: resp,
-			},
-			microservice.Field{
-				Key:   "total",
-				Value: total,
-			},
+			resp...,
 		)
 	}
 }

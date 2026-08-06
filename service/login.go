@@ -9,6 +9,7 @@ import (
 	"market-service/request"
 	"market-service/response"
 	"strings"
+	"time"
 
 	"github.com/New-Tatthep/microservice"
 	"github.com/New-Tatthep/microservice/log"
@@ -20,6 +21,7 @@ import (
 
 type CloudSessionAction interface {
 	CloudLogin(req request.LoginRequest) (*microservice.Field, error)
+	CloudLogout(reqData request.LogoutRequest) error
 }
 
 func (sv *service) CloudSession() CloudSessionAction {
@@ -179,7 +181,7 @@ func (sv *service) CloudCreateUserCache(data UserCache) error {
 		return custom_error.Wrap(errors.New("session length must be 1"))
 	}
 
-	// sessionDuration := time.Duration(sv.authConfig.SessionDuration) * time.Second
+	sessionDuration := time.Duration(sv.authConfig.SessionDuration) * time.Second
 
 	// get old session
 	oldSessionJson, err := sv.cache.HGet(RedisUserKey(data.UserProfile.UserCode), RedisSessionField)
@@ -314,18 +316,18 @@ func (sv *service) CloudCreateUserCache(data UserCache) error {
 	}
 
 	// set new session
-	// if err := sv.cache.HSetS(RedisUserKey(data.UserProfile.UserCode), RedisSessionField, newSessions.String(), sessionDuration); err != nil {
-	// 	return custom_error.Wrap(err)
-	// }
+	if err := sv.cache.HSetS(RedisUserKey(data.UserProfile.UserCode), RedisSessionField, newSessions.String(), sessionDuration); err != nil {
+		return custom_error.Wrap(err)
+	}
 
-	// // update user cache
-	// if err := sv.UpdateUserProfileCache(data.UserProfile.UserCode, sessionDuration, data.UserProfile); err != nil {
-	// 	return custom_error.Wrap(err)
-	// }
+	// update user cache
+	if err := sv.UpdateUserProfileCache(data.UserProfile.UserCode, sessionDuration, data.UserProfile); err != nil {
+		return custom_error.Wrap(err)
+	}
 
-	// if err := sv.UpdateUserPermissionCache(data.UserProfile.UserCode, sessionDuration, data.Permission); err != nil {
-	// 	return custom_error.Wrap(err)
-	// }
+	if err := sv.UpdateUserPermissionCache(data.UserProfile.UserCode, sessionDuration, data.Permission); err != nil {
+		return custom_error.Wrap(err)
+	}
 
 	return nil
 }
@@ -381,6 +383,50 @@ func (sv *service) SendForceLogoutMessage(userCode string, companyCode string, r
 			removeSession.BranchNo,
 		)
 	}
+
+	return nil
+}
+
+func (sv *service) CloudLogout(reqData request.LogoutRequest) error {
+	token, err := sv.GetToken()
+	if err != nil {
+		return custom_error.Wrap(err)
+	}
+
+	// extract token
+	userCode, sessionId, err := sv.ExtractToken(token)
+	if err != nil {
+		return custom_error.Wrap(err)
+	}
+
+	// get user profile for log before remove session
+	userProfile, _ := sv.GetUserProfile(userCode)
+
+	removeSession, err := sv.RemoveSession(userCode, sessionId)
+	if err != nil {
+		return custom_error.Wrap(err)
+	}
+
+	if removeSession == nil {
+		return nil
+	}
+
+	var logErr error
+	defer func() {
+		err := sv.InsertSignonLog(userProfile.Username, "", ActionLogout, reqData.IpAddress, reqData.UserAgent, logErr)
+		if err != nil {
+			sv.ctx.Logger().Debugf("InsertSignOnLog err : %s", err.Error())
+		}
+	}()
+
+	// send message logout through websocket
+	defer func() {
+		err := sv.SendLogoutMessage(removeSession.SubscribeChannel)
+		if err != nil {
+			logErr = err
+			sv.ctx.Logger().Debugf("InsertSignOnLog err : %s", err.Error())
+		}
+	}()
 
 	return nil
 }

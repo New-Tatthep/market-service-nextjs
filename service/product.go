@@ -8,20 +8,20 @@ import (
 )
 
 type ProductServiceAction interface {
-	FilterProduct(request microservice.FilterRequest) ([]microservice.Field, int64, error)
+	FilterProduct(request microservice.FilterRequest) ([]microservice.Field, error)
 }
 
 func (sv *service) ProductAction() ProductServiceAction {
 	return sv
 }
 
-func (sv *service) FilterProduct(request microservice.FilterRequest) ([]microservice.Field, int64, error) {
+func (sv *service) FilterProduct(request microservice.FilterRequest) ([]microservice.Field, error) {
 	resp := make([]response.FilterProductResponse, 0)
 	// var total int64 = 0
 	// if err := sv.store.Do(func(action datastore.IAction) error {
 	datalist, totals, err := sv.store.ProductAction().FilterProduct(request.GetFilters(), request.GetOption())
 	if err != nil {
-		return nil, -1, custom_error.Wrap(err)
+		return nil, custom_error.Wrap(err)
 	}
 
 	prepareImageInfo := response.UploadFile{}
@@ -48,5 +48,5 @@ func (sv *service) FilterProduct(request microservice.FilterRequest) ([]microser
 			Key:   "total",
 			Value: totals,
 		},
-	}, totals, nil
+	}, nil
 }

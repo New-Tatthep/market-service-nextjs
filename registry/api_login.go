@@ -7,10 +7,12 @@ import (
 )
 
 const (
-	LoginEndpoint = ServiceV1Endpoint + "/login"
+	LoginEndpoint  = ServiceV1Endpoint + "/login"
+	LogoutEndpoint = ServiceV1Endpoint + "/logout"
 )
 
 func ApiLoginRegister(ms microservice.IMicroservice) {
 	// both cloud and local
 	ms.POST(LoginEndpoint, handler.LoginHandler)
+	ms.POST(LogoutEndpoint, handler.LogoutHandler)
 }
